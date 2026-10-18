@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Editor Studio — Premium Web-Based Video Editor</title>
+<meta name="description" content="A professional, browser-based video editor built with Next.js, TypeScript, and Canvas. Multi-track timeline, animations, transitions, filters, MP4/WebM/GIF export, and more.">
+<meta name="author" content="Video Editor Studio">
+<meta property="og:title" content="Video Editor Studio — Premium Web-Based Video Editor">
+<meta property="og:description" content="Multi-track timeline, animations, transitions, filters, MP4/WebM/GIF export. Free and open-source.">
+<meta property="og:type" content="website">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-soft: #111827;
+    --card: #1c2536;
+    --border: #1e293b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-soft: #1e3a8a;
+    --accent: #fbbf24;
+    --emerald: #10b981;
+    --pink: #ec4899;
+    --purple: #8b5cf6;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(11, 18, 32, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+  }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-soft));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .nav { display: flex; gap: 24px; align-items: center; }
+  .nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav a:hover { color: var(--text); }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #2563eb; }
+
+  /* Hero */
+  .hero {
+    padding: 80px 0 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.15), transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.12), transparent 50%);
+    z-index: -1;
+  }
+  .hero h1 {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 20px;
+    line-height: 1.1;
+  }
+  .hero .tagline {
+    font-size: 20px;
+    color: var(--text-muted);
+    max-width: 720px;
+    margin: 0 auto 32px;
+  }
+  .hero-cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-lg {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-cta-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-cta-primary:hover { background: #2563eb; transform: translateY(-1px); }
+  .btn-cta-secondary {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-cta-secondary:hover { border-color: var(--primary); }
+
+  /* Editor mockup */
+  .editor-mockup {
+    margin: 60px auto 0;
+    max-width: 1100px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4);
+  }
+  .editor-titlebar {
+    background: var(--card);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ef4444; }
+  .dot.y { background: #fbbf24; }
+  .dot.g { background: #10b981; }
+  .editor-body { display: grid; grid-template-columns: 200px 1fr 200px; min-height: 380px; }
+  .editor-side { background: var(--card); padding: 12px; border-right: 1px solid var(--border); }
+  .editor-side.right { border-right: none; border-left: 1px solid var(--border); }
+  .editor-tab {
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+  }
+  .editor-tab.active { background: var(--primary-soft); color: #dbeafe; }
+  .editor-asset {
+    background: var(--bg-soft);
+    height: 40px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background-size: cover;
+    background-position: center;
+  }
+  .editor-preview {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .preview-canvas {
+    background: linear-gradient(135deg, #FFD700 0%, #0a1931 100%);
+    width: 70%;
+    aspect-ratio: 16/9;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 22px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  .editor-timeline {
+    background: var(--card);
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    grid-column: 1 / -1;
+  }
+  .timeline-track {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 28px;
+    margin-bottom: 6px;
+  }
+  .track-label {
+    width: 80px;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .track-clips { flex: 1; display: flex; gap: 2px; height: 100%; background: var(--bg-soft); border-radius: 4px; padding: 2px; }
+  .clip { height: 100%; border-radius: 3px; padding: 0 4px; font-size: 9px; color: white; display: flex; align-items: center; overflow: hidden; }
+  .clip.video { background: linear-gradient(90deg, #0ea5e9, #0284c7); }
+  .clip.audio { background: linear-gradient(90deg, #10b981, #047857); }
+  .clip.text { background: linear-gradient(90deg, #f59e0b, #b45309); }
+  .clip.sticker { background: linear-gradient(90deg, #ec4899, #be185d); }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 60px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat { text-align: center; }
+  .stat-num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Section */
+  section { padding: 80px 0; }
+  .section-title {
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .section-subtitle {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 17px;
+    margin-bottom: 48px;
+  }
+
+  /* Feature grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    transition: all 0.2s;
+  }
+  .feature-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+  .feature-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .feature-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Tool tabs */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .tool-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+  }
+  .tool-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  .tool-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .tool-count {
+    font-size: 12px;
+    color: var(--primary);
+  }
+
+  /* Shortcuts table */
+  .shortcuts-table {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .shortcut-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 1fr;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    font-size: 14px;
+  }
+  .shortcut-row:last-child { border-bottom: none; }
+  .shortcut-row:nth-child(odd) { background: rgba(255, 255, 255, 0.02); }
+  .shortcut-cat {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .shortcut-keys {
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .shortcut-action {
+    color: var(--text-muted);
+  }
+
+  /* Tech badges */
+  .tech-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 32px;
+  }
+  .badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+  .badge.react::before { background: #61dafb; }
+  .badge.ts::before { background: #3178c6; }
+  .badge.next::before { background: #fff; }
+  .badge.tailwind::before { background: #06b6d4; }
+  .badge.zustand::before { background: #ff8a3d; }
+  .badge.ffmpeg::before { background: #007ec6; }
+  .badge.canvas::before { background: #ff7139; }
+
+  /* Setup */
+  .setup-section { background: var(--bg-soft); }
+  .setup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    color: #c9d1d9;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .code-comment { color: #8b949e; }
+  .code-cmd { color: #79c0ff; }
+  .code-str { color: #a5d6ff; }
+
+  /* Themes showcase */
+  .themes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .theme-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .theme-preview { height: 100px; position: relative; }
+  .theme-studio { background: linear-gradient(135deg, #0b1220 0%, #111827 50%, #3b82f6 100%); }
+  .theme-holiday { background: linear-gradient(135deg, #0a1931 0%, #132a5a 50%, #FFD700 100%); }
+  .theme-pro { background: linear-gradient(135deg, #0f0f10 0%, #1c1c1e 50%, #f5f5f5 100%); }
+  .theme-info { padding: 14px 16px; }
+  .theme-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .theme-desc { font-size: 12px; color: var(--text-muted); }
+  .theme-tag {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    background: var(--primary-soft);
+    color: #dbeafe;
+    font-size: 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  /* Footer */
+  footer {
+    background: var(--bg-soft);
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  footer p { color: var(--text-muted); font-size: 13px; }
+  footer a { color: var(--primary); text-decoration: none; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 36px; }
+    .hero .tagline { font-size: 16px; }
+    .features-grid, .tools-grid, .themes-grid, .setup-grid, .stats { grid-template-columns: 1fr; }
+    .editor-body { grid-template-columns: 1fr; }
+    .editor-side { display: none; }
+    .shortcut-row { grid-template-columns: 1fr; gap: 4px; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <div class="logo">
+      <div class="logo-icon">🎬</div>
+      <span>Video Editor Studio</span>
+    </div>
+    <nav class="nav">
+      <a href="#features">Features</a>
+      <a href="#tools">Tools</a>
+      <a href="#shortcuts">Shortcuts</a>
+      <a href="#themes">Themes</a>
+      <a href="#setup">Setup</a>
+    </nav>
+    <a href="#setup" class="btn-primary">Get Started</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>The Premium Web-Based Video Editor</h1>
+    <p class="tagline">A complete, browser-based professional video editor built with Next.js, TypeScript, Zustand, and Canvas. Multi-track timeline, animations, transitions, filters, MP4/WebM/GIF export — all client-side, no server required.</p>
+    <div class="hero-cta">
+      <a href="#setup" class="btn-lg btn-cta-primary">⬇ Download Source</a>
+      <a href="#features" class="btn-lg btn-cta-secondary">Explore Features</a>
+    </div>
+
+    <!-- Editor Mockup -->
+    <div class="editor-mockup">
+      <div class="editor-titlebar">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+        <span style="margin-left: 8px;">video-editor-studio — localhost:3000</span>
+      </div>
+      <div class="editor-body">
+        <div class="editor-side">
+          <div class="editor-tab active">📊 Media</div>
+          <div class="editor-tab">✍️ Text</div>
+          <div class="editor-tab">😄 Sticker</div>
+          <div class="editor-tab">🎨 Filter</div>
+          <div class="editor-tab">🔀 Trans</div>
+          <div class="editor-tab">🎵 Audio</div>
+          <div style="margin-top: 14px;">
+            <div class="editor-asset" style="background: linear-gradient(135deg, #FFD700, #0a1931);"></div>
+            <div class="editor-asset" style="background: linear-gradient(135deg, #FF006E, #8338EC);"></div>
+            <div class="editor-asset" style="background: linear-gradient(135deg, #06FFA5, #03045E);"></div>
+            <div class="editor-asset" style="background: linear-gradient(135deg, #f59e0b, #b45309);"></div>
+          </div>
+        </div>
+        <div class="editor-preview">
+          <div class="preview-canvas">PREVIEW</div>
+        </div>
+        <div class="editor-side right">
+          <div class="editor-tab active">✨ Animate</div>
+          <div class="editor-tab">🔧 Transform</div>
+          <div class="editor-tab">⏱ Keys</div>
+          <div style="margin-top: 14px;">
+            <div style="background: var(--bg-soft); height: 30px; border-radius: 4px; margin-bottom: 6px; padding: 6px 8px; font-size: 10px;">Fade In</div>
+            <div style="background: var(--bg-soft); height: 30px; border-radius: 4px; margin-bottom: 6px; padding: 6px 8px; font-size: 10px;">Pop In</div>
+            <div style="background: var(--bg-soft); height: 30px; border-radius: 4px; margin-bottom: 6px; padding: 6px 8px; font-size: 10px;">Slide Up</div>
+            <div style="background: var(--primary-soft); height: 30px; border-radius: 4px; margin-bottom: 6px; padding: 6px 8px; font-size: 10px; color: #dbeafe;">Bounce In</div>
+          </div>
+        </div>
+        <div class="editor-timeline">
+          <div class="timeline-track">
+            <div class="track-label">VIDEO</div>
+            <div class="track-clips">
+              <div class="clip video" style="width: 50%;">🎬 Holiday Sample</div>
+              <div class="clip video" style="width: 40%;">🎬 Pink</div>
+            </div>
+          </div>
+          <div class="timeline-track">
+            <div class="track-label">TEXT</div>
+            <div class="track-clips">
+              <div class="clip text" style="width: 30%;">📝 Title</div>
+              <div class="clip text" style="width: 50%;">📝 Subtitle</div>
+            </div>
+          </div>
+          <div class="timeline-track">
+            <div class="track-label">AUDIO</div>
+            <div class="track-clips">
+              <div class="clip audio" style="width: 70%;">🎵 Background Music</div>
+            </div>
+          </div>
+          <div class="timeline-track">
+            <div class="track-label">STICKER</div>
+            <div class="track-clips">
+              <div class="clip sticker" style="width: 25%;">🎉</div>
+              <div class="clip sticker" style="width: 20%;">✨</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stats">
+  <div class="container">
+    <div class="stat">
+      <div class="stat-num">18</div>
+      <div class="stat-label">Transitions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">14</div>
+      <div class="stat-label">Filter Presets</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">160+</div>
+      <div class="stat-label">Stickers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">25+</div>
+      <div class="stat-label">Shortcuts</div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="container">
+    <h2 class="section-title">Everything You Need to Edit</h2>
+    <p class="section-subtitle">A complete feature set rivaling desktop editors — all in your browser.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎬</div>
+        <div class="feature-title">Multi-Track Timeline</div>
+        <div class="feature-desc">Video, audio, text, and sticker tracks with drag-drop, trim, split, snap, zoom, and bulk operations.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✨</div>
+        <div class="feature-title">Rich Animations</div>
+        <div class="feature-desc">13 entrance + 4 exit + 7 continuous loop animations, plus keyframe-based motion with 4 easing curves.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔀</div>
+        <div class="feature-title">18 Transitions</div>
+        <div class="feature-desc">Fade, dissolve, slide, zoom, wipe, circle, diamond, glitch, flash, blur — with adjustable duration.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">14 Filter Presets</div>
+        <div class="feature-desc">Vivid, Warm, Cool, Vintage, B&W, Sepia, Noir, Dramatic, Fade, Dreamy, Vignette, Invert, Blur + 9 manual adjustments.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✍️</div>
+        <div class="feature-title">Text & Captions</div>
+        <div class="feature-desc">10 templates × 10 style presets × 12 fonts. Stroke, shadow, background, letter-spacing — full control.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <div class="feature-title">Multi-Format Export</div>
+        <div class="feature-desc">MP4 (H.264), WebM (VP9), Animated GIF. MediaRecorder (fast) or FFmpeg.wasm (true H.264).</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⌨</div>
+        <div class="feature-title">Pro Keyboard Shortcuts</div>
+        <div class="feature-desc">Undo/redo, copy/paste, multi-select, ripple delete, nudge clips, split, snap — all standard editor shortcuts.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔊</div>
+        <div class="feature-title">Audio Waveforms</div>
+        <div class="feature-desc">Real-time canvas-rendered waveforms on audio clips. Tone generator (beep/chime/drum/music) via Web Audio API.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🚫</div>
+        <div class="feature-title">No Server Required</div>
+        <div class="feature-desc">100% client-side. No API keys, no backend, no paid dependencies. Just a static deploy.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools" style="background: var(--bg-soft);">
+  <div class="container">
+    <h2 class="section-title">7 Powerful Tool Tabs</h2>
+    <p class="section-subtitle">A complete asset library and editing toolkit in the left sidebar.</p>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-icon">📊</div>
+        <div class="tool-name">Media</div>
+        <div class="tool-count">Upload · Samples · Stock · Webcam</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">✍️</div>
+        <div class="tool-name">Text</div>
+        <div class="tool-count">10 templates · 10 styles · 12 fonts</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">😄</div>
+        <div class="tool-name">Sticker</div>
+        <div class="tool-count">160+ emojis · 8 categories</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🎨</div>
+        <div class="tool-name">Filter</div>
+        <div class="tool-count">14 presets · 9 adjustments</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🔀</div>
+        <div class="tool-name">Transitions</div>
+        <div class="tool-count">18 types · adjustable duration</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🎵</div>
+        <div class="tool-name">Audio</div>
+        <div class="tool-count">Upload · generate · fade · volume</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">✨</div>
+        <div class="tool-name">Magic</div>
+        <div class="tool-count">Bonus effects panel</div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">📖</div>
+        <div class="tool-name">Guide</div>
+        <div class="tool-count">18 sections · 60+ features</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="shortcuts">
+  <div class="container">
+    <h2 class="section-title">Keyboard Shortcuts</h2>
+    <p class="section-subtitle">Work faster with pro editor shortcuts. Press <code style="background: var(--card); padding: 2px 8px; border-radius: 4px; font-family: monospace;">?</code> anytime in the app to see all.</p>
+    <div class="shortcuts-table">
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Playback</div>
+        <div><span class="shortcut-keys">Space</span></div>
+        <div class="shortcut-action">Play / Pause</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Playback</div>
+        <div><span class="shortcut-keys">← / →</span></div>
+        <div class="shortcut-action">Step 1 frame</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Playback</div>
+        <div><span class="shortcut-keys">Shift + ←/→</span></div>
+        <div class="shortcut-action">Jump 1 second</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">Delete</span></div>
+        <div class="shortcut-action">Delete selected clip(s)</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">Shift + Delete</span></div>
+        <div class="shortcut-action">Ripple delete (shift later clips left)</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">Ctrl + Z</span></div>
+        <div class="shortcut-action">Undo</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">Ctrl + Y</span></div>
+        <div class="shortcut-action">Redo</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">Ctrl + C / V</span></div>
+        <div class="shortcut-action">Copy / Paste clip</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">Ctrl + D</span></div>
+        <div class="shortcut-action">Duplicate clip</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">S</span></div>
+        <div class="shortcut-action">Split clip at playhead</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Editing</div>
+        <div><span class="shortcut-keys">Shift + Click</span></div>
+        <div class="shortcut-action">Multi-select clips</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Timeline</div>
+        <div><span class="shortcut-keys">T</span></div>
+        <div class="shortcut-action">Add text clip</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Timeline</div>
+        <div><span class="shortcut-keys">Ctrl + ←/→</span></div>
+        <div class="shortcut-action">Nudge clip 1 frame</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">Timeline</div>
+        <div><span class="shortcut-keys">Ctrl + Shift + ←/→</span></div>
+        <div class="shortcut-action">Nudge clip 1 second</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">View</div>
+        <div><span class="shortcut-keys">H / F1</span></div>
+        <div class="shortcut-action">Open User Guide</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">View</div>
+        <div><span class="shortcut-keys">?</span></div>
+        <div class="shortcut-action">Show shortcuts list</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">File</div>
+        <div><span class="shortcut-keys">Ctrl + E</span></div>
+        <div class="shortcut-action">Open Export dialog</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">File</div>
+        <div><span class="shortcut-keys">Ctrl + S</span></div>
+        <div class="shortcut-action">Save project (JSON)</div>
+      </div>
+      <div class="shortcut-row">
+        <div class="shortcut-cat">File</div>
+        <div><span class="shortcut-keys">Ctrl + O</span></div>
+        <div class="shortcut-action">Open project (JSON)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="themes" style="background: var(--bg-soft);">
+  <div class="container">
+    <h2 class="section-title">3 Polished Themes</h2>
+    <p class="section-subtitle">Switch instantly — affects only the UI, not your project.</p>
+    <div class="themes-grid">
+      <div class="theme-card">
+        <div class="theme-preview theme-studio"></div>
+        <div class="theme-info">
+          <div class="theme-name">Studio <span class="theme-tag">Default</span></div>
+          <div class="theme-desc">Midnight navy + slate text + subtle blue accent. CapCut/Premiere-inspired.</div>
+        </div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-preview theme-holiday"></div>
+        <div class="theme-info">
+          <div class="theme-name">Holiday</div>
+          <div class="theme-desc">Gold + dark blue. Festive look from the original Holiday Catcher editor.</div>
+        </div>
+      </div>
+      <div class="theme-card">
+        <div class="theme-preview theme-pro"></div>
+        <div class="theme-info">
+          <div class="theme-name">Pro</div>
+          <div class="theme-desc">Neutral slate/zinc. Adobe Premiere-style, distraction-free.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="setup" class="setup-section">
+  <div class="container">
+    <h2 class="section-title">Get Started in 3 Steps</h2>
+    <p class="section-subtitle">No build pipeline configuration needed. Just install and run.</p>
+    <div class="setup-grid">
+      <div>
+        <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--primary);">1. Clone & Install</h3>
+        <div class="code-block">
+<span class="code-comment"># Clone the repository</span>
+<span class="code-cmd">git</span> clone https://github.com/YOUR_USERNAME/video-editor-studio.git
+<span class="code-cmd">cd</span> video-editor-studio
+
+<span class="code-comment"># Install dependencies (Bun recommended)</span>
+<span class="code-cmd">bun</span> install
+
+<span class="code-comment"># OR with npm/yarn/pnpm</span>
+<span class="code-cmd">npm</span> install
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--primary);">2. Run Dev Server</h3>
+        <div class="code-block">
+<span class="code-comment"># Start development server</span>
+<span class="code-cmd">bun</span> run dev
+
+<span class="code-comment"># Server starts at http://localhost:3000</span>
+<span class="code-comment"># Open in your browser</span>
+
+<span class="code-comment"># Build for production</span>
+<span class="code-cmd">bun</span> run build
+<span class="code-cmd">bun</span> run start
+        </div>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--primary);">3. Quick Tips</h3>
+        <div class="code-block">
+<span class="code-comment"># Click the "Demo" button in the header to load a sample project</span>
+<span class="code-comment"># Press Space to play, ? to see all shortcuts, H for the user guide</span>
+<span class="code-comment"># Drag any asset from the left sidebar directly to the timeline</span>
+<span class="code-comment"># Press Ctrl+E to export your video as MP4, WebM, or GIF</span>
+
+<span class="code-comment"># Save your project as JSON for later: Ctrl+S</span>
+<span class="code-comment"># Reopen with Ctrl+O — your timeline is restored exactly</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tech-badges">
+      <span class="badge react">React 19</span>
+      <span class="badge next">Next.js 16</span>
+      <span class="badge ts">TypeScript 5</span>
+      <span class="badge tailwind">Tailwind CSS 4</span>
+      <span class="badge zustand">Zustand</span>
+      <span class="badge canvas">Canvas 2D</span>
+      <span class="badge ffmpeg">FFmpeg.wasm</span>
+      <span class="badge">shadcn/ui</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>
+      <strong>Video Editor Studio</strong> — Free and open-source. Built with Next.js, TypeScript, and ❤️.
+    </p>
+    <p style="margin-top: 8px;">
+      No API keys required. No backend. No paid dependencies. 100% client-side.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
